@@ -42,20 +42,20 @@ class ProcessCloserApp:
 
         logging.info("Initializing ProcessCloserApp")
 
-        self.config = utils.load_config('config.json')
+        self.config = utils.load_config(CONFIG_FILE)
 
         # self.status_label = tk.Label(root, text="Status: Unknown")
         # self.status_label.pack(pady=10)
         
         button_width = 20  # Set a standard width for all buttons
 
-        self.start_button = tk.Button(root, text="Start Service", command=self.start_service, width=button_width)
+        self.start_button = tk.Button(root, text="Start A Service", command=self.start_service, width=button_width)
         self.start_button.pack(pady=10)
 
-        self.stop_button = tk.Button(root, text="Stop Service", command=self.stop_service, width=button_width)
+        self.stop_button = tk.Button(root, text="Stop A Service", command=self.stop_service, width=button_width)
         self.stop_button.pack(pady=10)
 
-        self.remove_button = tk.Button(root, text="Delete Service", command=self.delete_service, width=button_width)
+        self.remove_button = tk.Button(root, text="Delete A Service", command=self.delete_service, width=button_width)
         self.remove_button.pack(pady=10)
 
         self.display_potential_services_button = tk.Button(root, text="Display Potential Services", command=self.display_potential_services, width=button_width)
@@ -64,7 +64,7 @@ class ProcessCloserApp:
         self.display_locked_services_button = tk.Button(root, text="Display Stopped Services", command=self.display_stopped_services, width=button_width)
         self.display_locked_services_button.pack(pady=10)
 
-        self.display_locked_services_button = tk.Button(root, text="Locked Service", command=self.lock_service, width=button_width)
+        self.display_locked_services_button = tk.Button(root, text="Lock A Service", command=self.lock_service, width=button_width)
         self.display_locked_services_button.pack(pady=10)
 
         self.display_locked_services_button = tk.Button(root, text="Display Locked Services", command=self.display_locked_services, width=button_width)
@@ -117,7 +117,7 @@ class ProcessCloserApp:
                 "days": days
             }
 
-            utils.save_config('config.json', self.config)
+            utils.save_config(CONFIG_FILE, self.config)
             utils.create_service(service_name, sys.executable)
             
             messagebox.showinfo("Info", "Service started successfully")
@@ -185,7 +185,7 @@ class ProcessCloserApp:
         try:
             subprocess.run([self.nssm, 'remove', service_name])
             del self.config[service_name]
-            utils.save_config('config.json', self.config)
+            utils.save_config(CONFIG_FILE, self.config)
         except Exception as e:
             messagebox.showerror("Error", f"Failed to Delete service: {e}")
 
@@ -197,6 +197,7 @@ class ProcessCloserApp:
         
         running_processes = utils.get_availavle_processes()
         sorted_processes = sorted(running_processes.keys())
+
         process_list_window = tk.Toplevel(self.root)
         process_list_window.title("Running Processes")
 
@@ -222,8 +223,18 @@ class ProcessCloserApp:
 
     def display_stopped_services(self):
         self.root.attributes('-topmost', False)
-        # Implementation to display locked services
-        pass
+
+        config = utils.load_config(CONFIG_FILE)
+
+        stopped_processes_window = tk.Toplevel(self.root)
+        stopped_processes_window.title("Stopped Processes")
+
+        # Create a new frame within the stopped_processes_window
+        frame = tk.Frame(stopped_processes_window)
+        frame.pack(fill="both", expand=True)
+
+        for process, process_config in config.items():
+            tk.Label(frame, text=f"• Name: {process.title()} | Start time: {process_config['start_time']} | End time: {process_config['end_time']} | Days: {','.join(process_config['days']).title()}", anchor='w', justify='left').pack(anchor='w', padx=10, pady=2)
 
     def display_locked_services(self):
         self.root.attributes('-topmost', False)
