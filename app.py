@@ -22,6 +22,23 @@ class ProcessCloserApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Process Closer Service")
+        
+        # Bring the window to the front
+        self.root.attributes('-topmost', True)
+        # self.root.after_idle(self.root.attributes, '-topmost', False)
+
+        # Set the initial size of the window
+        window_width = 400
+        window_height = 400
+
+        # Get the screen's width and height
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+
+        # Calculate the position coordinates for the center of the screen
+        position_right = int(screen_width/2 - window_width/2)
+        position_down = int(screen_height/2 - window_height/2) - 100
+        self.root.geometry(f"{window_width}x{window_height}+{position_right}+{position_down}")
 
         logging.info("Initializing ProcessCloserApp")
 
@@ -29,22 +46,29 @@ class ProcessCloserApp:
 
         # self.status_label = tk.Label(root, text="Status: Unknown")
         # self.status_label.pack(pady=10)
+        
+        button_width = 20  # Set a standard width for all buttons
 
-        self.start_button = tk.Button(root, text="Start Service", command=self.start_service)
+        self.start_button = tk.Button(root, text="Start Service", command=self.start_service, width=button_width)
         self.start_button.pack(pady=10)
 
-        self.stop_button = tk.Button(root, text="Stop Service", command=self.stop_service)
+        self.stop_button = tk.Button(root, text="Stop Service", command=self.stop_service, width=button_width)
         self.stop_button.pack(pady=10)
 
-        self.remove_button = tk.Button(root, text="Delete Service", command=self.delete_service)
+        self.remove_button = tk.Button(root, text="Delete Service", command=self.delete_service, width=button_width)
         self.remove_button.pack(pady=10)
 
-        self.display_potential_services_button = tk.Button(root, text="Display All Services", command=self.display_potential_services)
+        self.display_potential_services_button = tk.Button(root, text="Display Potential Services", command=self.display_potential_services, width=button_width)
         self.display_potential_services_button.pack(pady=10)
 
-        self.display_locked_services_button = tk.Button(root, text="Display All Services", command=self.display_locked_services)
+        self.display_locked_services_button = tk.Button(root, text="Display Stopped Services", command=self.display_stopped_services, width=button_width)
         self.display_locked_services_button.pack(pady=10)
 
+        self.display_locked_services_button = tk.Button(root, text="Locked Service", command=self.lock_service, width=button_width)
+        self.display_locked_services_button.pack(pady=10)
+
+        self.display_locked_services_button = tk.Button(root, text="Display Locked Services", command=self.display_locked_services, width=button_width)
+        self.display_locked_services_button.pack(pady=10)
 
         # self.update_status()
         dest_folder = utils.get_dest_folder()
@@ -63,6 +87,7 @@ class ProcessCloserApp:
     
     def start_service(self):
         logging.info("Attempting to start service")
+        self.root.attributes('-topmost', False)
         
         service_name = simpledialog.askstring("Input", "Enter service name:")
         
@@ -124,6 +149,8 @@ class ProcessCloserApp:
 
     def stop_service(self):
         logging.info("Attempting to stop service")
+        self.root.attributes('-topmost', False)
+
         service_name = simpledialog.askstring("Input", "Enter service name:")
         
         if not service_name:
@@ -143,6 +170,7 @@ class ProcessCloserApp:
 
     def delete_service(self):
         logging.info("Attempting to delete service")
+        self.root.attributes('-topmost', False)
 
         service_name = simpledialog.askstring("Input", "Enter service name:")
         
@@ -161,11 +189,44 @@ class ProcessCloserApp:
         except Exception as e:
             messagebox.showerror("Error", f"Failed to Delete service: {e}")
 
+    def lock_service(self):
+        pass
+
     def display_potential_services(self):
-        # Implementation to display potential services
+        self.root.attributes('-topmost', False)
+        
+        running_processes = utils.get_availavle_processes()
+        sorted_processes = sorted(running_processes.keys())
+        process_list_window = tk.Toplevel(self.root)
+        process_list_window.title("Running Processes")
+
+        canvas = tk.Canvas(process_list_window)
+        scrollbar = tk.Scrollbar(process_list_window, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        for process in sorted_processes:
+            tk.Label(scrollable_frame, text=f"• Name: {process}", anchor='w', justify='left').pack(anchor='w', padx=10, pady=2)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+    def display_stopped_services(self):
+        self.root.attributes('-topmost', False)
+        # Implementation to display locked services
         pass
 
     def display_locked_services(self):
+        self.root.attributes('-topmost', False)
         # Implementation to display locked services
         pass
 
@@ -198,25 +259,14 @@ def is_admin():
     try: return ctypes.windll.shell32.IsUserAnAdmin()
     except: return False
 
-if __name__ == "__main__":
+def run_as_admin():
     if not is_admin():
         script = os.path.abspath(sys.argv[0])
-        subprocess.Popen(['python', 'run_as_admin.py', script] + sys.argv[1:])
+        subprocess.run(['python', 'run_as_admin.py', script] + sys.argv[1:])
         sys.exit()
-    
-    print('foo')
-    print(os.getcwd())
-    # time.sleep(100)
-    
-    
-    # make_dirs(os.getcwd())
-    # utils.check_and_install_nssm()
-    # manager_dir = get_dest_folder()
-    # if not os.path.exists(os.path.join(manager_dir, 'process_closer.exe')): copy_exe()
-
+        
+if __name__ == "__main__":
+    run_as_admin()
     root = tk.Tk()
     app = ProcessCloserApp(root)
     root.mainloop()
-    print(is_admin())
-    print('fin')
-    # sys.exit()
