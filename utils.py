@@ -1,5 +1,6 @@
 import subprocess
 import logging
+import psutil
 import json
 import os
 
@@ -73,3 +74,6 @@ def convert_days_to_nums(days):
     }
     # Convert each day word to num
     return [day_map[day] for day in days]
+
+def get_availavle_processes():
+    return {proc.info['name'].lower(): proc for proc in psutil.process_iter(['name']) if '.exe' in proc.info['name'].lower()}
