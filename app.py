@@ -11,7 +11,7 @@ import sys
 import os
 
 CONFIG_FILE = "config.json"
-LOCKED_FILE = "locked.json"
+LOCKED_CONFIG = "locked.json"
 
 # Set up logging configuration
 logging.basicConfig(
@@ -44,8 +44,8 @@ class ProcessCloserApp(tk.Tk):
         position_down = int(screen_height/2 - window_height/2) - 100
         self.geometry(f"{window_width}x{window_height}+{position_right}+{position_down}")
 
-        self.config = utils.load_config(CONFIG_FILE)
-        self.locked_config = utils.load_config(LOCKED_FILE)
+        self.config = utils.load_config(CONFIG_FILE)    
+        self.locked_config = utils.load_config(LOCKED_CONFIG)
         self.frames = {}
         # Create container frame
         container = tk.Frame(self)
