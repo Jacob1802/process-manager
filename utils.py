@@ -61,6 +61,7 @@ def save_config(config_file, config):
     with open(config_file, "w") as f:
         json.dump(config, f, indent=4)
 
+
 def convert_days_to_nums(days):
     day_map = {
         'monday' : 0,
@@ -73,6 +74,7 @@ def convert_days_to_nums(days):
     }
     # Convert each day word to num
     return [day_map[day] for day in days]
+
 
 def get_available_processes():
     return {proc.info['name'].lower(): proc for proc in psutil.process_iter(['name']) if '.exe' in proc.info['name'].lower()}
