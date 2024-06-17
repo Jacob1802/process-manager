@@ -5,11 +5,6 @@ class BasePage(tk.Frame):
         super().__init__(parent)
         self.controller = controller
 
-class HomePage(BasePage):
-    def __init__(self, parent, controller):
-        super().__init__(parent, controller)
-        button_width = 30  # Set a standard width for all buttons
-        
         # Configure the grid layout
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
@@ -28,6 +23,11 @@ class HomePage(BasePage):
 
         # Add padding to the top by configuring an empty row at the top
         self.grid_rowconfigure(0, minsize=10)
+
+class HomePage(BasePage):
+    def __init__(self, parent, controller):
+        super().__init__(parent, controller)
+        button_width = 30  # Set a standard width for all buttons
 
         self.display_potential_services_button = tk.Button(self, text="Display Potential Processes", command=controller.display_potential_services, width=button_width)
         self.display_potential_services_button.grid(row=1, column=1, pady=10)
@@ -110,6 +110,12 @@ class StartServicePage(BasePage):
             self.controller.start_service_logic(service_name, start_time, end_time, days)
         else:
             messagebox.showerror("Error", "All fields are required!")
+
+class DisplayPotentialServicesPage(BasePage):
+    def __init__(self, parent, controller):
+        super().__init__(parent, controller)
+        tk.Label(self, text="Display Potential Services Page").pack(pady=10)
+        tk.Button(self, text="Back to Home", command=lambda: controller.show_frame("HomePage")).pack()
 
 class StopServicePage(BasePage):
     def __init__(self, parent, controller):
