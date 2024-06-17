@@ -55,7 +55,7 @@ class ProcessCloserApp(tk.Tk):
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
 
-        for F in (pages.HomePage, pages.StartServicePage, pages.StopServicePage, pages.DeleteServicePage, pages.LockServicePage):
+        for F in (pages.DisplayPotentialServicesPage, pages.HomePage, pages.StartServicePage, pages.StopServicePage, pages.DeleteServicePage, pages.LockServicePage):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
@@ -167,12 +167,10 @@ class ProcessCloserApp(tk.Tk):
         pass
 
     def display_potential_services(self):
-        self.root.attributes('-topmost', False)
-        
-        running_processes = utils.get_availavle_processes()
+        running_processes = utils.get_available_processes()
         sorted_processes = sorted(running_processes.keys())
 
-        process_list_window = tk.Toplevel(self.root)
+        process_list_window = tk.Toplevel(self)
         process_list_window.title("Running Processes")
 
         canvas = tk.Canvas(process_list_window)
@@ -211,7 +209,6 @@ class ProcessCloserApp(tk.Tk):
             tk.Label(frame, text=f"• {process.title()} | Start time: {process_config['start_time']} | End time: {process_config['end_time']} | Days: {','.join(process_config['days']).title()}", anchor='w', justify='left').pack(anchor='w', padx=10, pady=2)
 
     def display_locked_services(self):
-        self.root.attributes('-topmost', False)
         # Implementation to display locked services
         pass
 
