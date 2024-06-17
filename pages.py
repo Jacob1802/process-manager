@@ -73,7 +73,7 @@ class BasePage(tk.Frame):
     def check_day_entry(self, days_string):
         days = []
         for day in days_string.split(','):
-            if day.strip().lower() not in ['monday', 'tuesday', 'wednesday', 'thrusday', 'friday', 'saturday', 'sunday']:
+            if day.strip().lower() not in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
                 tk.messagebox.showerror("Error", "Invalid day")
                 return
             else: days.append(day)
@@ -113,13 +113,16 @@ class BasePage(tk.Frame):
         tk.Button(self, text="Back to Home", command=lambda: self.controller.show_frame("HomePage")).grid(row=10, column=1, columnspan=2, pady=10)
     
     def check_if_service_locked(self, service_name):
-        start_lock, duration = self.controller.locked_config[service_name]
+        start_lock = self.controller.locked_config[service_name]['start_time']
+        duration = self.controller.locked_config[service_name]['length_seconds']
+
         return True if (start_lock + duration) > dt.datetime.now().timestamp() else False 
 
     def calculate_remaining_time(self, service_name):
         if self.check_if_service_locked(service_name):
-            start_time, duration = self.controller.locked_config[service_name]
-            remaining_time = (dt.datetime.now().timestamp() - (start_time + duration)) / 60 / 60
+            start_time = self.controller.locked_config[service_name]['start_time']
+            duration = self.controller.locked_config[service_name]['length_seconds']
+            remaining_time = ((start_time + duration) - dt.datetime.now().timestamp()) / 60 / 60
             return remaining_time
         # Release lock
         del self.controller.locked_config[service_name]
@@ -291,7 +294,7 @@ class LockServicePage(BasePage):
             "start_time": dt.datetime.now().timestamp(),
             "length_seconds": int(length) * 60 * 60
         }
-        
+        utils.save_config('locked.json', self.controller.locked_config)
         tk.messagebox.showinfo("Info", f"Service successfully locked for {length} hours")
         self.controller.show_frame("HomePage")
 
