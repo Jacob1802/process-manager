@@ -53,8 +53,7 @@ def load_config(config_file):
     if os.path.exists(config_file):
         with open(config_file, "r") as f:
             return json.load(f)
-    else:
-        return {'file does not exist' : config_file, 'current_path' : os.getcwd()}
+    
     return {}
 
 
@@ -75,5 +74,5 @@ def convert_days_to_nums(days):
     # Convert each day word to num
     return [day_map[day] for day in days]
 
-def get_availavle_processes():
+def get_available_processes():
     return {proc.info['name'].lower(): proc for proc in psutil.process_iter(['name']) if '.exe' in proc.info['name'].lower()}
