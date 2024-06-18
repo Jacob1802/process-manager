@@ -1,24 +1,14 @@
-
-from tkinter import messagebox, simpledialog
 import tkinter as tk
 import subprocess
-import logging
 import ctypes
 import utils
 import pages
-import time
 import sys
 import os
 
-CONFIG_FILE = "config.json"
-LOCKED_CONFIG = "locked.json"
 
-# Set up logging configuration
-logging.basicConfig(
-    filename='game_closer.log',
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+appdata_dir = os.path.join(os.environ['APPDATA'], 'ProcessCloserService')
+os.makedirs(appdata_dir, exist_ok=True)
 
 class ProcessCloserApp(tk.Tk):
     def __init__(self):
@@ -43,9 +33,13 @@ class ProcessCloserApp(tk.Tk):
         position_right = int(screen_width/2 - window_width/2)
         position_down = int(screen_height/2 - window_height/2) - 100
         self.geometry(f"{window_width}x{window_height}+{position_right}+{position_down}")
+        
+        self.config_path = os.path.join(appdata_dir, "config.json")
+        self.locked_config_path = os.path.join(appdata_dir, "locked.json")
 
-        self.config = utils.load_config(CONFIG_FILE)    
-        self.locked_config = utils.load_config(LOCKED_CONFIG)
+        self.config = utils.load_config(self.config_path)
+        self.locked_config = utils.load_config(self.locked_config_path)
+        
         self.frames = {}
         # Create container frame
         container = tk.Frame(self)

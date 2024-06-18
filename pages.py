@@ -6,14 +6,6 @@ import logging
 import utils
 import sys
 
-logging.basicConfig(
-    filename='game_closer.log',
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-
-CONFIG_FILE = 'config.json'
-
 class BasePage(tk.Frame):
     def __init__(self, parent, controller):
         super().__init__(parent)
@@ -54,7 +46,7 @@ class BasePage(tk.Frame):
                 "days": day_list
             }
 
-            utils.save_config(CONFIG_FILE, self.controller.config)
+            utils.save_config(self.controller.config_path, self.controller.config)
             utils.create_service(service_name, sys.executable)
             messagebox.showinfo("Info", "Service started successfully")
         except Exception as e:
@@ -275,7 +267,7 @@ class DeleteServicePage(BasePage):
         try:
             subprocess.run([self.controller.nssm, 'remove', service_name])
             del self.controller.config[service_name]
-            utils.save_config(CONFIG_FILE, self.controller.config)
+            utils.save_config(self.controller.config_path, self.controller.config)
             messagebox.showinfo("Info", "Service Deleted successfully")
             self.controller.show_frame("HomePage")
         except Exception as e:
@@ -316,7 +308,7 @@ class LockServicePage(BasePage):
             "start_time": dt.datetime.now().timestamp(),
             "length_seconds": int(length) * 60 * 60
         }
-        utils.save_config('locked.json', self.controller.locked_config)
+        utils.save_config(self.controller.locked_config_path, self.controller.locked_config)
         messagebox.showinfo("Info", f"Service successfully locked for {length} hours")
         self.controller.show_frame("HomePage")
 
