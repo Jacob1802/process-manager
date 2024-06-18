@@ -1,3 +1,4 @@
+from tkinter import messagebox
 import datetime as dt
 import tkinter as tk
 import subprocess
@@ -55,17 +56,17 @@ class BasePage(tk.Frame):
 
             utils.save_config(CONFIG_FILE, self.controller.config)
             utils.create_service(service_name, sys.executable)
-            tk.messagebox.showinfo("Info", "Service started successfully")
+            messagebox.showinfo("Info", "Service started successfully")
         except Exception as e:
-            tk.messagebox.showerror("Error", f"Failed to start service: {e}")
+            messagebox.showerror("Error", f"Failed to start service: {e}")
 
     def check_time_entry(self, time):
         if ":" not in time:
-            tk.messagebox.showerror("Error", "Missing semi colon")
+            messagebox.showerror("Error", "Missing semi colon")
             return False
         time_str = time.split(':')
         if not time_str[0].isnumeric() or not time_str[1].isnumeric():
-            tk.messagebox.showerror("Error", "Invalid time")
+            messagebox.showerror("Error", "Invalid time")
             return False
 
         return True
@@ -74,7 +75,7 @@ class BasePage(tk.Frame):
         days = []
         for day in days_string.split(','):
             if day.strip().lower() not in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
-                tk.messagebox.showerror("Error", "Invalid day")
+                messagebox.showerror("Error", "Invalid day")
                 return
             else: days.append(day)
         
@@ -82,23 +83,20 @@ class BasePage(tk.Frame):
 
     def validate_service_name(self, service_name):
         if not service_name:
-            tk.messagebox.showerror("Error", "Service name cannot be empty")
+            messagebox.showerror("Error", "Service name cannot be empty")
             return False
     
         if service_name not in self.controller.config.keys():
-            tk.messagebox.showerror("Error", "Service does not exist")
+            messagebox.showerror("Error", "Service does not exist")
             return False
         
         if service_name in self.controller.locked_config.keys():
             # Calculate time left, if time left throw error
             if remaining_time := self.calculate_remaining_time(service_name):
-                tk.messagebox.showerror("Error", f"Service is locked for {remaining_time} more hours")
+                messagebox.showerror("Error", f"Service is locked for {remaining_time} more hours")
                 return False
         
         return True
-
-    def add_service_page_header(self, text):
-        tk.Label(self, text=text).grid(row=0, column=1, columnspan=2, pady=10)
 
     def add_service_name_input(self):
         tk.Label(self, text="Service Name:").grid(row=1, column=1, pady=0, sticky="e")
@@ -177,7 +175,7 @@ class StartServicePage(BasePage):
         self.grid_columnconfigure(3, weight=1)
 
         # Add the widgets using grid
-        self.add_service_page_header(text="Start Service Page")
+        tk.Label(self, text="Start Service Page").grid(row=0, column=1, columnspan=2, pady=10)
         self.add_service_name_input()
 
         self.start_time_label = tk.Label(self, text="Start Time (HH:MM):")
@@ -202,31 +200,41 @@ class StartServicePage(BasePage):
         self.add_back_to_home_button()
     
     def start_service(self):
-        service_name = self.service_name_entry.get()
+        try:
+            service_name = self.service_name_entry.get()
 
-        if not service_name:
-            tk.messagebox.showerror("Error", "Service name cannot be empty")
-            return
+            if not service_name:
+                messagebox.showerror("Error", "Service name cannot be empty")
+                return
 
-        if service_name in self.controller.config.keys():
-            tk.messagebox.showerror("Error", "Service already exists")
-            return
-        
-        start_time = self.start_time_entry.get()
-        end_time = self.end_time_entry.get()
-        days = self.days_entry.get()
-        
-        if start_time and end_time and days:
-            self.start_service_logic(service_name, start_time, end_time, days)
-            self.controller.show_frame("HomePage")
-        else:
-            tk.messagebox.showerror("Error", "All fields are required!")
+            if service_name in self.controller.config.keys():
+                messagebox.showerror("Error", "Service already exists")
+                return
+            
+            start_time = self.start_time_entry.get()
+            end_time = self.end_time_entry.get()
+            days = self.days_entry.get()
+            
+            if start_time and end_time and days:
+                self.start_service_logic(service_name, start_time, end_time, days)
+                self.controller.show_frame("HomePage")
+            else:
+                messagebox.showerror("Error", "All fields are required!")
+        except Exception as e:
+            logging.error(e)
 
 class StopServicePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
-        
-        self.add_service_page_header(text="Stop Service Page")
+        self.grid_rowconfigure(0, minsize=20)
+
+        # Adjust column configurations for better centering
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(3, weight=1)
+
+        tk.Label(self, text="Stop Service Page").grid(row=0, column=1, columnspan=2, pady=10, sticky='n')
         self.add_service_name_input()
         self.add_submit(self.stop_service)
         self.add_back_to_home_button()
@@ -238,16 +246,23 @@ class StopServicePage(BasePage):
 
         try:
             subprocess.run([self.controller.nssm, 'stop', service_name], check=True)
-            tk.messagebox.showinfo("Info", "Service stopped successfully")
+            messagebox.showinfo("Info", "Service stopped successfully")
             self.controller.show_frame("HomePage")
         except Exception as e:
-            tk.messagebox.showerror("Error", f"Failed to stop service: {e}")
+            messagebox.showerror("Error", f"Failed to stop service: {e}")
 
 class DeleteServicePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
-        
-        self.add_service_page_header(text="Delete Service Page")
+        self.grid_rowconfigure(0, minsize=20)
+
+        # Adjust column configurations for better centering
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(3, weight=1)
+
+        tk.Label(self, text="Delete Service Page").grid(row=0, column=1, columnspan=2, pady=10, sticky='n')
         self.add_service_name_input()
         self.add_submit(self.delete_service)
         self.add_back_to_home_button()
@@ -261,16 +276,23 @@ class DeleteServicePage(BasePage):
             subprocess.run([self.controller.nssm, 'remove', service_name])
             del self.controller.config[service_name]
             utils.save_config(CONFIG_FILE, self.controller.config)
-            tk.messagebox.showinfo("Info", "Service Deleted successfully")
+            messagebox.showinfo("Info", "Service Deleted successfully")
             self.controller.show_frame("HomePage")
         except Exception as e:
-            tk.messagebox.showerror("Error", f"Failed to Delete service: {e}")
+            messagebox.showerror("Error", f"Failed to Delete service: {e}")
 
 class LockServicePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
+        self.grid_rowconfigure(0, minsize=20)
+
+        # Adjust column configurations for better centering
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(3, weight=1)
         
-        self.add_service_page_header(text="Lock Service Page")
+        tk.Label(self, text="Lock Service Page").grid(row=0, column=1, columnspan=2, pady=10, sticky='n')
         self.add_service_name_input()
         self.length_label = tk.Label(self, text="Length (Hrs):")
         self.length_label.grid(row=2, column=1, pady=0, sticky="e")
@@ -288,21 +310,28 @@ class LockServicePage(BasePage):
         length = self.length_entry.get()
         # Check if length is valid
         if not length.isnumeric():
-            tk.messagebox.showerror("Error", "Invalid time")
+            messagebox.showerror("Error", "Invalid time")
 
         self.controller.locked_config[service_name] = {
             "start_time": dt.datetime.now().timestamp(),
             "length_seconds": int(length) * 60 * 60
         }
         utils.save_config('locked.json', self.controller.locked_config)
-        tk.messagebox.showinfo("Info", f"Service successfully locked for {length} hours")
+        messagebox.showinfo("Info", f"Service successfully locked for {length} hours")
         self.controller.show_frame("HomePage")
 
 class EditServicePage(BasePage):
     def __init__(self, parent, controller):
         super().__init__(parent, controller)
-        
-        self.add_service_page_header(text="Edit Service Page")
+        self.grid_rowconfigure(0, minsize=20)
+
+        # Adjust column configurations for better centering
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
+        self.grid_columnconfigure(3, weight=1)
+
+        tk.Label(self, text="Edit Service Page").grid(row=0, column=1, columnspan=2, pady=10, sticky='n')
         self.add_service_name_input()
 
         self.start_time_label = tk.Label(self, text="Start Time (HH:MM):")
@@ -339,4 +368,4 @@ class EditServicePage(BasePage):
             self.start_service_logic(service_name, start_time, end_time, days)
             self.controller.show_frame("HomePage")
         else:
-            tk.messagebox.showerror("Error", "All fields are required!")
+            messagebox.showerror("Error", "All fields are required!")
