@@ -3,17 +3,19 @@ import datetime as dt
 import utils
 import time
 import sys
+import os
+
+appdata_dir = os.path.join(os.environ['APPDATA'], 'ProcessCloserService')
 
 def set_process_termination(process):
     try:
-        # config_path = os.path.join(os.getcwd(), 'config.json')
-        config = utils.load_config('C:\\Users\\user\\Documents\\Projects\\process-manager\\config.json')
+        config_path = os.path.join(appdata_dir, 'config.json')
+        config = utils.load_config(config_path)
 
         process_data = config[process]
         start_time = dt.datetime.strptime(process_data['start_time'], "%H:%M").time()
         end_time = dt.datetime.strptime(process_data['end_time'], "%H:%M").time()
         days = utils.convert_days_to_nums(process_data['days'])
-
 
         while True:
             now = dt.datetime.now()
