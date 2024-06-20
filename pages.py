@@ -86,7 +86,7 @@ class BasePage(tk.Frame):
         if service_name in self.controller.locked_config.keys():
             # Calculate time left, if time left throw error
             if remaining_time := self.calculate_remaining_time(service_name):
-                messagebox.showerror("Error", f"Service is locked for {remaining_time} more hours")
+                messagebox.showerror("Error", f"Service is locked for {remaining_time[0]} hours and {remaining_time[1]} more minutes")
                 return False
         
         return True
@@ -114,7 +114,10 @@ class BasePage(tk.Frame):
             start_time = self.controller.locked_config[service_name]['start_time']
             duration = self.controller.locked_config[service_name]['length_seconds']
             remaining_time = ((start_time + duration) - dt.datetime.now().timestamp()) / 60 / 60
-            return remaining_time
+            hours = int(remaining_time)
+            minutes = (remaining_time - hours) * 60
+            minutes = round(minutes) 
+            return (hours, minutes)
         # Release lock
         del self.controller.locked_config[service_name]
         return None
