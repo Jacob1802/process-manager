@@ -31,18 +31,13 @@ def set_process_termination(process):
     except Exception as e:
         return
 
-
 def terminate_process(process_names: List[str]):
     """Function to close specified processes if they are running."""
-    # Collect all running processes once
     running_processes = utils.get_available_processes()
-
     for name in process_names:
         process_name_lower = name.lower() + ".exe"
-
         if process_name_lower in running_processes.keys():
             running_processes[process_name_lower].terminate()
-
 
 if __name__ == "__main__":
     set_process_termination(sys.argv[1])
