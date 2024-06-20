@@ -42,12 +42,14 @@ class BasePage(tk.Frame):
             self.controller.config[service_name] = {
                 "start_time": start_time,
                 "end_time": end_time,
-                "days": day_list
+                "days": day_list,
+                'status': 'running'
             }
 
             utils.save_config(self.controller.CONFIG_FILE, self.controller.config)
             utils.create_service(service_name)
             messagebox.showinfo("Info", "Service started successfully")
+            return True
         except Exception as e:
             messagebox.showerror("Error", f"Failed to start service: {e}")
 
@@ -56,7 +58,7 @@ class BasePage(tk.Frame):
             messagebox.showerror("Error", "Missing semi colon")
             return False
         time_str = time.split(':')
-        if not time_str[0].isnumeric() or not time_str[1].isnumeric():
+        if not time_str[0].isnumeric() or not time_str[1].isnumeric() or len(time) != 5:
             messagebox.showerror("Error", "Invalid time")
             return False
 
@@ -194,10 +196,6 @@ class StartServicePage(BasePage):
         try:
             service_name = self.service_name_entry.get()
 
-            if not service_name:
-                messagebox.showerror("Error", "Service name cannot be empty")
-                return
-
             if service_name in self.controller.config.keys():
                 messagebox.showerror("Error", "Service already exists")
                 return
@@ -207,8 +205,9 @@ class StartServicePage(BasePage):
             days = self.days_entry.get()
             
             if start_time and end_time and days:
-                self.start_service_logic(service_name, start_time, end_time, days)
-                self.controller.show_frame("HomePage")
+                result = self.start_service_logic(service_name, start_time, end_time, days)
+                if result:
+                    self.controller.show_frame("HomePage")
             else:
                 messagebox.showerror("Error", "All fields are required!")
         except Exception as e:
@@ -237,6 +236,7 @@ class StopServicePage(BasePage):
 
         try:
             subprocess.run([self.controller.nssm, 'stop', service_name], check=True)
+            self.controller.config[service_name]['status'] = 'stopped'
             messagebox.showinfo("Info", "Service stopped successfully")
             self.controller.show_frame("HomePage")
         except Exception as e:
@@ -261,6 +261,9 @@ class DeleteServicePage(BasePage):
     def delete_service(self):
         service_name = self.service_name_entry.get()
         if not self.validate_service_name(service_name):
+            return
+        if self.controller.config[service_name]['status'] != 'stopped':
+            messagebox.showerror("Error", "Service must be stopped before it is deleted")
             return
 
         try:
@@ -357,7 +360,8 @@ class EditServicePage(BasePage):
         days = self.days_entry.get()
         
         if start_time and end_time and days:
-            self.start_service_logic(service_name, start_time, end_time, days)
-            self.controller.show_frame("HomePage")
+            result = self.start_service_logic(service_name, start_time, end_time, days)
+            if result:
+                self.controller.show_frame("HomePage")
         else:
             messagebox.showerror("Error", "All fields are required!")
