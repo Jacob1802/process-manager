@@ -1,7 +1,6 @@
-import os
-import sys
-import ctypes
 import subprocess
+import ctypes
+import sys
 
 def run_as_admin(cmd, wait=True):
     """Run a command as an administrator."""
