@@ -4,7 +4,6 @@ import tkinter as tk
 import subprocess
 import logging
 import utils
-import sys
 
 class BasePage(tk.Frame):
     def __init__(self, parent, controller):
@@ -46,8 +45,8 @@ class BasePage(tk.Frame):
                 "days": day_list
             }
 
-            utils.save_config(self.controller.config_path, self.controller.config)
-            utils.create_service(service_name, sys.executable)
+            utils.save_config(self.controller.CONFIG_FILE, self.controller.config)
+            utils.create_service(service_name)
             messagebox.showinfo("Info", "Service started successfully")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to start service: {e}")
@@ -265,10 +264,11 @@ class DeleteServicePage(BasePage):
             return
 
         try:
+            self.controller.move_to_back()
             subprocess.run([self.controller.nssm, 'remove', service_name])
             del self.controller.config[service_name]
-            utils.save_config(self.controller.config_path, self.controller.config)
-            messagebox.showinfo("Info", "Service Deleted successfully")
+            utils.save_config(self.controller.CONFIG_FILE, self.controller.config)
+            self.controller.attributes('-topmost', True)
             self.controller.show_frame("HomePage")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to Delete service: {e}")
@@ -308,7 +308,7 @@ class LockServicePage(BasePage):
             "start_time": dt.datetime.now().timestamp(),
             "length_seconds": int(length) * 60 * 60
         }
-        utils.save_config(self.controller.locked_config_path, self.controller.locked_config)
+        utils.save_config(self.controller.LOCKED_CONFIG, self.controller.locked_config)
         messagebox.showinfo("Info", f"Service successfully locked for {length} hours")
         self.controller.show_frame("HomePage")
 
