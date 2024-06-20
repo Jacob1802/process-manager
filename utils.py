@@ -5,21 +5,18 @@ import logging
 import psutil
 import json
 import os
+import sys
 
 appdata_dir = os.path.join(os.environ['APPDATA'], 'ProcessCloserService')
 zip_path = os.path.join(appdata_dir, 'nssm-2.24.zip')
-nssm_path = os.path.join(appdata_dir, 'nssm-2.24', 'win64', 'nssm.exe')
-log_path = os.path.join(appdata_dir, 'output.log')
-
-
-logging.basicConfig(filename=log_path, level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+nssm_path = os.path.join(appdata_dir, "nssm-2.24", "win64", "nssm.exe")
+error_log_path = os.path.join(appdata_dir, 'output.log')
 
 def check_and_install_nssm():
     """Check if NSSM is installed in System32 and install it if not."""
     if not os.path.exists(nssm_path):
         download_nssm()
         extract_zip(zip_path, appdata_dir)
-        # Remove the downloaded zip file after extraction
         os.remove(zip_path)
 
 def download_nssm():
@@ -36,27 +33,27 @@ def extract_zip(zip_filepath, extract_to):
     with zipfile.ZipFile(zip_filepath, 'r') as zip_ref:
         zip_ref.extractall(extract_to)
 
-
-def create_service(service_name, executable):
-    if not nssm_path:
-        logging.error("Error: Path to NSSM not provided.")
+def create_service(service_name):
+    if not os.path.exists(nssm_path):
+        logging.error("Error: Nssm not installed")
         return
     
     exe_path = 'C:\\Users\\user\\Documents\\Projects\\process-manager\\close.py'
-
+    executable = sys.executable
+    
     try:
-        subprocess.run([nssm_path, 'install', service_name, executable, exe_path, service_name])
-        subprocess.run([nssm_path, 'set', service_name, 'AppStdout', log_path], check=True)
-        subprocess.run([nssm_path, 'set', service_name, 'AppStderr', log_path], check=True)
-        subprocess.run([nssm_path, 'start', service_name], check=True)
+        subprocess.run([nssm_path, 'install', service_name, executable, exe_path, service_name], check=True, capture_output=True, text=True)
+        subprocess.run([nssm_path, 'set', service_name, 'AppStdout', error_log_path], check=True, capture_output=True, text=True)
+        subprocess.run([nssm_path, 'set', service_name, 'AppStderr', error_log_path], check=True, capture_output=True, text=True)
+        subprocess.run([nssm_path, 'set', service_name, 'AppEnvironmentExtra', f"APPDATA={os.environ['APPDATA']}"], check=True, capture_output=True, text=True)
+        subprocess.run([nssm_path, 'start', service_name], check=True, capture_output=True, text=True)
     except Exception as e:
-        logging.error(f"Error installing service: {e}")
+        logging.error(f"Unexpected error: {str(e)}", exc_info=True)
 
 def load_config(config_file):
     if os.path.exists(config_file):
         with open(config_file, "r") as f:
             return json.load(f)
-    
     return {}
 
 def save_config(config_file, config):
@@ -68,12 +65,11 @@ def convert_days_to_nums(days):
         'monday' : 0,
         'tuesday' : 1,
         'wednesday' : 2,
-        'thrusday' : 3,
+        'thursday' : 3,
         'friday' : 4,
         'saturday' : 5,
         'sunday' : 6,
     }
-    # Convert each day word to num
     return [day_map[day] for day in days]
 
 def get_available_processes():
