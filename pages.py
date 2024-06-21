@@ -43,7 +43,8 @@ class BasePage(tk.Frame):
                 "start_time": start_time,
                 "end_time": end_time,
                 "days": day_list,
-                'status': 'running'
+                'status': 'running',
+                'locked_config': None,
             }
 
             utils.save_config(self.controller.CONFIG_FILE, self.controller.config)
@@ -83,7 +84,7 @@ class BasePage(tk.Frame):
             messagebox.showerror("Error", "Service does not exist")
             return False
         
-        if service_name in self.controller.locked_config.keys():
+        if self.controller.config[service_name]['locked_config']:
             # Calculate time left, if time left throw error
             if remaining_time := self.calculate_remaining_time(service_name):
                 messagebox.showerror("Error", f"Service is locked for {remaining_time[0]} hours and {remaining_time[1]} more minutes")
@@ -104,22 +105,24 @@ class BasePage(tk.Frame):
         tk.Button(self, text="Back to Home", command=lambda: self.controller.show_frame("HomePage")).grid(row=10, column=1, columnspan=2, pady=10)
     
     def check_if_service_locked(self, service_name):
-        start_lock = self.controller.locked_config[service_name]['start_time']
-        duration = self.controller.locked_config[service_name]['length_seconds']
-
-        return True if (start_lock + duration) > dt.datetime.now().timestamp() else False 
+        try:
+            start_lock = self.controller.config[service_name]['locked_config']['start_time']
+            duration = self.controller.config[service_name]['locked_config']['length_seconds']
+            return True if (start_lock + duration) > dt.datetime.now().timestamp() else False
+        except KeyError:
+            return False
 
     def calculate_remaining_time(self, service_name):
         if self.check_if_service_locked(service_name):
-            start_time = self.controller.locked_config[service_name]['start_time']
-            duration = self.controller.locked_config[service_name]['length_seconds']
+            start_time = self.controller.config[service_name]['locked_config']['start_time']
+            duration = self.controller.config[service_name]['locked_config']['length_seconds']
             remaining_time = ((start_time + duration) - dt.datetime.now().timestamp()) / 60 / 60
             hours = int(remaining_time)
             minutes = (remaining_time - hours) * 60
             minutes = round(minutes) 
             return (hours, minutes)
         # Release lock
-        del self.controller.locked_config[service_name]
+        self.controller.config[service_name]['locked_config'] = None
         return None
     
 class HomePage(BasePage):
@@ -240,6 +243,7 @@ class StopServicePage(BasePage):
         try:
             subprocess.run([self.controller.nssm, 'stop', service_name], check=True)
             self.controller.config[service_name]['status'] = 'stopped'
+            utils.save_config(self.controller.CONFIG_FILE, self.controller.config)
             messagebox.showinfo("Info", "Service stopped successfully")
             self.controller.show_frame("HomePage")
         except Exception as e:
@@ -310,11 +314,11 @@ class LockServicePage(BasePage):
         if not length.isnumeric():
             messagebox.showerror("Error", "Invalid time")
 
-        self.controller.locked_config[service_name] = {
+        self.controller.config[service_name]['locked_config'] = {
             "start_time": dt.datetime.now().timestamp(),
             "length_seconds": int(length) * 60 * 60
         }
-        utils.save_config(self.controller.LOCKED_CONFIG, self.controller.locked_config)
+        utils.save_config(self.controller.CONFIG_FILE, self.controller.config)
         messagebox.showinfo("Info", f"Service successfully locked for {length} hours")
         self.controller.show_frame("HomePage")
 
