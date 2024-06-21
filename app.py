@@ -1,19 +1,22 @@
 import tkinter as tk
 import subprocess
-import ctypes
 import logging
+import ctypes
 import utils
 import pages
 import sys
 import os
 
 
-# TODO: make exe, sign code, make view started/operating processes page, ensure process is stopped before deleting, fix pop up msg if error
+# TODO: make exe, sign code, make view started/operating processes page
 
 appdata_dir = os.path.join(os.environ['APPDATA'], 'ProcessCloserService')
 os.makedirs(appdata_dir, exist_ok=True)
-
-log_path = os.path.join(appdata_dir, 'output.log')
+config_dir = os.path.join(appdata_dir, 'config')
+os.makedirs(config_dir, exist_ok=True)
+log_dir = os.path.join(appdata_dir, 'logs')
+os.makedirs(log_dir, exist_ok=True)
+log_path = os.path.join(log_dir, 'output.log')
 logging.basicConfig(filename=log_path, level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class ProcessCloserApp(tk.Tk):
@@ -25,7 +28,7 @@ class ProcessCloserApp(tk.Tk):
             # Bring the window to the front
             self.attributes('-topmost', True)
             
-            # utils.check_and_install_nssm()
+            utils.check_and_install_nssm()
             self.nssm = os.path.join(appdata_dir, 'nssm-2.24', 'win64', 'nssm.exe')
             
             # Set the initial size of the window        
@@ -41,10 +44,8 @@ class ProcessCloserApp(tk.Tk):
             position_down = int(screen_height/2 - window_height/2) - 100
             self.geometry(f"{window_width}x{window_height}+{position_right}+{position_down}")
 
-            self.CONFIG_FILE = os.path.join(appdata_dir, 'config.json')
-            self.LOCKED_CONFIG = os.path.join(appdata_dir, 'locked.json')
+            self.CONFIG_FILE = os.path.join(config_dir, 'config.json')
             self.config = utils.load_config(self.CONFIG_FILE)
-            self.locked_config = utils.load_config(self.LOCKED_CONFIG)
             
             self.frames = {}
             # Create container frame
