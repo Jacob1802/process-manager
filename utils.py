@@ -4,13 +4,13 @@ import zipfile
 import logging
 import psutil
 import json
-import os
 import sys
+import os
 
 appdata_dir = os.path.join(os.environ['APPDATA'], 'ProcessCloserService')
 zip_path = os.path.join(appdata_dir, 'nssm-2.24.zip')
 nssm_path = os.path.join(appdata_dir, "nssm-2.24", "win64", "nssm.exe")
-error_log_path = os.path.join(appdata_dir, 'output.log')
+error_log_path = os.path.join(appdata_dir, 'logs', 'output.log')
 
 def check_and_install_nssm():
     """Check if NSSM is installed in System32 and install it if not."""
@@ -38,7 +38,7 @@ def create_service(service_name):
         logging.error("Error: Nssm not installed")
         return
     
-    exe_path = 'C:\\Users\\user\\Documents\\Projects\\process-manager\\close.py'
+    exe_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'close.py')
     executable = sys.executable
     
     try:
@@ -47,6 +47,12 @@ def create_service(service_name):
         subprocess.run([nssm_path, 'set', service_name, 'AppStderr', error_log_path], check=True, capture_output=True, text=True)
         subprocess.run([nssm_path, 'set', service_name, 'AppEnvironmentExtra', f"APPDATA={os.environ['APPDATA']}"], check=True, capture_output=True, text=True)
         subprocess.run([nssm_path, 'start', service_name], check=True, capture_output=True, text=True)
+    except Exception as e:
+        logging.error(f"Unexpected error: {str(e)}", exc_info=True)
+
+def restart_service(service_name):
+    try:
+        subprocess.run([nssm_path, 'restart', service_name], check=True, capture_output=True, text=True)
     except Exception as e:
         logging.error(f"Unexpected error: {str(e)}", exc_info=True)
 
