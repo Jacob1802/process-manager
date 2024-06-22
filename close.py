@@ -9,7 +9,7 @@ appdata_dir = os.path.join(os.environ['APPDATA'], 'ProcessCloserService')
 
 def set_process_termination(process):
     try:
-        config_path = os.path.join(appdata_dir, 'config.json')
+        config_path = os.path.join(appdata_dir, 'config', 'config.json')
         config = utils.load_config(config_path)
 
         process_data = config[process]
