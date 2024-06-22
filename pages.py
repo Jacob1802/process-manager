@@ -29,30 +29,15 @@ class BasePage(tk.Frame):
         # Add padding to the top by configuring an empty row at the top
         self.grid_rowconfigure(0, minsize=10)
     
-    def start_service_logic(self, service_name, start_time, end_time, days):
-        try:
-            if not self.check_time_entry(start_time):
-                return
-            if not self.check_time_entry(end_time):
-                return
-            day_list = self.check_day_entry(days)
-            if not day_list:
-                return
+    def check_inputs(self, start_time, end_time, days):
+        if not self.check_time_entry(start_time):
+            return
+        if not self.check_time_entry(end_time):
+            return
+        if not self.check_day_entry(days):
+            return
 
-            self.controller.config[service_name] = {
-                "start_time": start_time,
-                "end_time": end_time,
-                "days": day_list,
-                'status': 'running',
-                'locked_config': None,
-            }
-
-            utils.save_config(self.controller.CONFIG_FILE, self.controller.config)
-            utils.create_service(service_name)
-            messagebox.showinfo("Info", "Service started successfully")
-            return True
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to start service: {e}")
+        return True
 
     def check_time_entry(self, time):
         if ":" not in time:
@@ -67,11 +52,15 @@ class BasePage(tk.Frame):
 
     def check_day_entry(self, days_string):
         days = []
-        for day in days_string.split(','):
-            if day.strip().lower() not in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
-                messagebox.showerror("Error", "Invalid day")
-                return
+        errors = []
+        for day in days_string:
+            if day not in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
+                errors.append(day)
             else: days.append(day)
+
+        if errors:
+            messagebox.showerror("Error", f"Invalid days {','.join(errors)}")
+            return
         
         return days
 
@@ -209,10 +198,22 @@ class StartServicePage(BasePage):
             start_time = self.start_time_entry.get()
             end_time = self.end_time_entry.get()
             days = self.days_entry.get()
+            days = [day.lower().strip() for day in days.split(',')]
             
             if start_time and end_time and days:
-                result = self.start_service_logic(service_name, start_time, end_time, days)
+                result = self.check_inputs(start_time, end_time, days)
                 if result:
+                    self.controller.config[service_name] = {
+                        "start_time": start_time,
+                        "end_time": end_time,
+                        "days": days,
+                        'status': 'running',
+                        'locked_config': None,
+                    }
+
+                    utils.save_config(self.controller.CONFIG_FILE, self.controller.config)
+                    utils.create_service(service_name)
+                    messagebox.showinfo("Info", "Service started successfully")
                     self.controller.show_frame("HomePage")
             else:
                 messagebox.showerror("Error", "All fields are required!")
@@ -365,10 +366,22 @@ class EditServicePage(BasePage):
         start_time = self.start_time_entry.get()
         end_time = self.end_time_entry.get()
         days = self.days_entry.get()
-        
+        days = [day.lower().strip() for day in days.split(',')]
+
         if start_time and end_time and days:
-            result = self.start_service_logic(service_name, start_time, end_time, days)
+            result = self.check_inputs(start_time, end_time, days)
             if result:
+                self.controller.config[service_name] = {
+                    "start_time": start_time,
+                    "end_time": end_time,
+                    "days": days,
+                    'status': 'running',
+                    'locked_config': None,
+                }
+
+                utils.save_config(self.controller.CONFIG_FILE, self.controller.config)
+                utils.restart_service(service_name)
+                messagebox.showinfo("Info", "Service started successfully")
                 self.controller.show_frame("HomePage")
         else:
             messagebox.showerror("Error", "All fields are required!")
