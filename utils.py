@@ -1,3 +1,4 @@
+import pkg_resources
 import subprocess
 import requests
 import zipfile
@@ -6,6 +7,17 @@ import psutil
 import json
 import sys
 import os
+
+def get_resource_path(relative_path):
+    """ Get the absolute path to the resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 
 appdata_dir = os.path.join(os.environ['APPDATA'], 'ProcessCloserService')
 zip_path = os.path.join(appdata_dir, 'nssm-2.24.zip')
@@ -35,20 +47,34 @@ def extract_zip(zip_filepath, extract_to):
 
 def create_service(service_name):
     if not os.path.exists(nssm_path):
-        logging.error("Error: Nssm not installed")
+        logging.error("Error: NSSM not installed")
         return
     
-    exe_path = os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), 'close.py')
+    # base_path = os.getcwd()
+    # exe_path = os.path.join(base_path, 'close.py')
+    exe_path = get_resource_path('close.py')
     executable = sys.executable
     
     try:
-        subprocess.run([nssm_path, 'install', service_name, executable, exe_path, service_name], check=True, capture_output=True, text=True)
-        subprocess.run([nssm_path, 'set', service_name, 'AppStdout', error_log_path], check=True, capture_output=True, text=True)
-        subprocess.run([nssm_path, 'set', service_name, 'AppStderr', error_log_path], check=True, capture_output=True, text=True)
-        subprocess.run([nssm_path, 'set', service_name, 'AppEnvironmentExtra', f"APPDATA={os.environ['APPDATA']}"], check=True, capture_output=True, text=True)
-        subprocess.run([nssm_path, 'start', service_name], check=True, capture_output=True, text=True)
-    except Exception as e:
-        logging.error(f"Unexpected error: {str(e)}", exc_info=True)
+        # Ensure paths with spaces are properly quoted
+        install_command = [nssm_path, 'install', service_name, executable, exe_path, service_name]
+        subprocess.run(install_command, check=True, capture_output=True, text=True)
+
+        set_stdout_command = [nssm_path, 'set', service_name, 'AppStdout', error_log_path]
+        subprocess.run(set_stdout_command, check=True, capture_output=True, text=True)
+        
+        set_stderr_command = [nssm_path, 'set', service_name, 'AppStderr', error_log_path]
+        subprocess.run(set_stderr_command, check=True, capture_output=True, text=True)        
+        
+        set_env_command = [nssm_path, 'set', service_name, 'AppEnvironmentExtra', f"APPDATA={os.environ['APPDATA']}"]
+        subprocess.run(set_env_command, check=True, capture_output=True, text=True)
+        
+        start_command = [nssm_path, 'start', service_name]
+        subprocess.run(start_command, check=True, capture_output=True, text=True)
+
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Unexpected error: {e}", exc_info=True)
+    logging.info('Finished setting up the service')
 
 def restart_service(service_name):
     try:

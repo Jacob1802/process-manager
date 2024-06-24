@@ -7,7 +7,15 @@ import pages
 import sys
 import os
 
+def get_resource_path(relative_path):
+    """ Get the absolute path to the resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
 
+    return os.path.join(base_path, relative_path)
 # TODO: make exe, sign code, make view started/operating processes page
 
 appdata_dir = os.path.join(os.environ['APPDATA'], 'ProcessCloserService')
@@ -61,7 +69,7 @@ class ProcessCloserApp(tk.Tk):
                 self.frames[page_name] = frame
                 frame.grid(row=0, column=0, sticky="nsew")
         except Exception as e:
-            logging.error(e)
+            logging.error(f'app error {e}')
         
         self.show_frame("HomePage")
 
@@ -79,12 +87,15 @@ def is_admin():
 
 def run_as_admin():
     if not is_admin():
-        script = os.path.abspath(sys.argv[0])
+        script = 'app.py'
         subprocess.run(['python', 'run_as_admin.py', script] + sys.argv[1:])
         sys.exit()
         
 if __name__ == "__main__":
-    run_as_admin()
-
-    app = ProcessCloserApp()
-    app.mainloop()
+    try:
+        run_as_admin()
+        app = ProcessCloserApp()
+        app.mainloop()
+    except Exception as e:
+        logging.error(f'Unhandled exception: {e}', exc_info=True)
+        raise
