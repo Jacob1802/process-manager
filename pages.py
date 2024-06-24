@@ -189,7 +189,10 @@ class StartServicePage(BasePage):
     
     def start_service(self):
         try:
-            service_name = self.service_name_entry.get()
+            try:
+                service_name = self.service_name_entry.get().lower().split('.')[0]
+            except IndexError:
+                service_name = self.service_name_entry.get().lower()
 
             if service_name in self.controller.config.keys():
                 messagebox.showerror("Error", "Service already exists")
@@ -218,7 +221,7 @@ class StartServicePage(BasePage):
             else:
                 messagebox.showerror("Error", "All fields are required!")
         except Exception as e:
-            logging.error(e)
+            logging.error(f' start error {e}')
 
 class StopServicePage(BasePage):
     def __init__(self, parent, controller):
@@ -237,7 +240,7 @@ class StopServicePage(BasePage):
         self.add_back_to_home_button()
         
     def stop_service(self):
-        service_name = self.service_name_entry.get()
+        service_name = self.service_name_entry.get().lower()
         if not self.validate_service_name(service_name):
             return
 
@@ -267,7 +270,7 @@ class DeleteServicePage(BasePage):
         self.add_back_to_home_button()
         
     def delete_service(self):
-        service_name = self.service_name_entry.get()
+        service_name = self.service_name_entry.get().lower()
         if not self.validate_service_name(service_name):
             return
         if self.controller.config[service_name]['status'] != 'stopped':
@@ -306,7 +309,7 @@ class LockServicePage(BasePage):
         self.add_back_to_home_button()
 
     def lock_service(self):
-        service_name = self.service_name_entry.get()
+        service_name = self.service_name_entry.get().lower()
         if not self.validate_service_name(service_name):
             return
         
@@ -359,7 +362,10 @@ class EditServicePage(BasePage):
         self.add_back_to_home_button()
     
     def edit_service_process(self):
-        service_name = self.service_name_entry.get()
+        try:
+            service_name = self.service_name_entry.get().lower().split('.')[0]
+        except IndexError:
+            service_name = self.service_name_entry.get().lower()
         if not self.validate_service_name(service_name):
             return
         
