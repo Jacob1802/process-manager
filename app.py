@@ -1,7 +1,5 @@
 import tkinter as tk
-import subprocess
 import logging
-import ctypes
 import utils
 import pages
 import sys
