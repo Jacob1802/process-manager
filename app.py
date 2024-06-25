@@ -81,19 +81,9 @@ class ProcessCloserApp(tk.Tk):
         self.attributes('-topmost', False)
         self.lower()
 
-def is_admin():
-    try: return ctypes.windll.shell32.IsUserAnAdmin()
-    except: return False
-
-def run_as_admin():
-    if not is_admin():
-        script = 'app.py'
-        subprocess.run(['python', 'run_as_admin.py', script] + sys.argv[1:])
-        sys.exit()
         
 if __name__ == "__main__":
     try:
-        run_as_admin()
         app = ProcessCloserApp()
         app.mainloop()
     except Exception as e:
