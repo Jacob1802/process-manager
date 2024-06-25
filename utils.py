@@ -1,4 +1,3 @@
-import pkg_resources
 import subprocess
 import requests
 import zipfile
@@ -50,21 +49,17 @@ def create_service(service_name):
         logging.error("Error: NSSM not installed")
         return
     
-    # base_path = os.getcwd()
-    # exe_path = os.path.join(base_path, 'close.py')
-    exe_path = get_resource_path('close.py')
-    executable = sys.executable
-    
+    process_closer_file = get_resource_path('close.py')
     try:
         # Ensure paths with spaces are properly quoted
-        install_command = [nssm_path, 'install', service_name, executable, exe_path, service_name]
+        install_command = [nssm_path, 'install', service_name, 'python', process_closer_file, service_name]
         subprocess.run(install_command, check=True, capture_output=True, text=True)
 
         set_stdout_command = [nssm_path, 'set', service_name, 'AppStdout', error_log_path]
         subprocess.run(set_stdout_command, check=True, capture_output=True, text=True)
         
         set_stderr_command = [nssm_path, 'set', service_name, 'AppStderr', error_log_path]
-        subprocess.run(set_stderr_command, check=True, capture_output=True, text=True)        
+        subprocess.run(set_stderr_command, check=True, capture_output=True, text=True)
         
         set_env_command = [nssm_path, 'set', service_name, 'AppEnvironmentExtra', f"APPDATA={os.environ['APPDATA']}"]
         subprocess.run(set_env_command, check=True, capture_output=True, text=True)
