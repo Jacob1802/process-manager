@@ -69,7 +69,6 @@ def create_service(service_name):
 
     except subprocess.CalledProcessError as e:
         logging.error(f"Unexpected error: {e}", exc_info=True)
-    logging.info('Finished setting up the service')
 
 def restart_service(service_name):
     try:
