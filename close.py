@@ -24,7 +24,7 @@ def set_process_termination(process):
             current_day = now.weekday()
             if current_day in days:
                 if start_time <= current_time <= end_time:
-                    terminate_process([process])
+                    terminate_process(process)
             
             time.sleep(10)
     except KeyboardInterrupt:
@@ -32,13 +32,18 @@ def set_process_termination(process):
     except Exception as e:
         return
 
-def terminate_process(process_names: List[str]):
+def terminate_process(process_name: str):
     """Function to close specified processes if they are running."""
-    running_processes = {proc.info['name'].lower(): proc for proc in psutil.process_iter(['name']) if '.exe' in proc.info['name'].lower()}
-    for name in process_names:
-        process_name_lower = name.lower() + ".exe"
-        if process_name_lower in running_processes.keys():
-            running_processes[process_name_lower].terminate()
+    for proc in psutil.process_iter(['pid', 'name']):
+        try: 
+            name = proc.info['name'].split('.')[0].lower()
+        except IndexError: 
+            name = proc.info['name'].lower()
+
+        if name == process_name:
+            print(f'Terminating {name}')
+            proc.terminate()
+            proc.wait() 
 
 def load_config(config_file):
     if os.path.exists(config_file):
