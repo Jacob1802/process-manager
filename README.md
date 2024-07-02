@@ -21,19 +21,22 @@ Process Closer Service is a process management tool designed to help you manage 
 
 ### Option 2: Clone the Repository
 1. **Clone the Repository:**
+```bash
    - git clone https://github.com/Jacob1802/process-manager.git
    - cd process-manager
    - pip install -r requirements.txt
    - runas /user:Administrator "python app.py"
+```
 
 ### Option 3: Clone the Repository
 1. **Compile the Executable:**
+```bash
    - git clone https://github.com/Jacob1802/process-manager.git
    - cd process-manager
    - pip install pyinstaller
    - pyinstaller app.spec
-   - navigate to the 'dist' directory then right click and run the file as admin
-
+```
+navigate to the 'dist' directory then right click and run the file as admin
 
 ## Usage
 ### Main Interface
